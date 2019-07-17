@@ -129,12 +129,12 @@ components:
             created: 2019-05-03T09:06:53.543Z
             index: 0
             explorers:
-                  - name: The Factoid Explorer
-                    url: https://explorer.factoid.org/entry?hash=0462e4cc100ca935a3ab9118d0b508f6802815a7290451cd67b2d80fdf080671
-                    ledger: FACTOM
-                  - name: Factom.com Explorer
-                    url: https://explorer.factom.com/chains/1e92265cdbaac5de353ca32239dd53565740a135ad9594a6166d2abd9cf538e4/entries/0462e4cc100ca935a3ab9118d0b508f6802815a7290451cd67b2d80fdf080671
-                    ledger: FACTOM
+              - name: The Factoid Explorer
+                url: https://explorer.factoid.org/entry?hash=0462e4cc100ca935a3ab9118d0b508f6802815a7290451cd67b2d80fdf080671
+                ledger: FACTOM
+              - name: Factom.com Explorer
+                url: https://explorer.factom.com/chains/1e92265cdbaac5de353ca32239dd53565740a135ad9594a6166d2abd9cf538e4/entries/0462e4cc100ca935a3ab9118d0b508f6802815a7290451cd67b2d80fdf080671
+                ledger: FACTOM
             finality:
               level: anchor
               local: 2019-05-03T09:06:53.544Z
@@ -148,7 +148,7 @@ components:
     ContextRequest:
       type: object
       required:
-        - ManagementIds
+        - backendIds
         - name
       properties:
         access:
@@ -193,16 +193,16 @@ components:
     EntryResult:
       description: This is the Data Result. A chain is created with a first Entry.
         The chain Id is calculated from the firt Entry where the content part of
-        the entry is omited during Chain ID calculation. After the chain is
+        the entry is omited during Chain Id calculation. After the chain is
         stored you can traverse the cahin using the API (not this object)
       type: object
       required:
         - type
         - chainId
-        - DataId
+        - entryId
         - created
-        - Management
-        - Data
+        - context
+        - entry
       properties:
         type:
           $ref: "#/components/schemas/EntryType"
@@ -310,7 +310,7 @@ components:
       type: string
       enum:
         - CHAIN
-        - Data
+        - ENTRY
     NetworkType:
       type: string
       enum:
@@ -331,12 +331,7 @@ components:
         modes:
           type: array
           items:
-            type: string
-            enum:
-              - NONE
-              - READ
-              - WRITE
-              - PUBLIC
+            $ref: '#/components/schemas/Mode'
         blackList:
           type: array
           items:
@@ -345,6 +340,13 @@ components:
           type: array
           items:
             type: string
+    Mode:
+      type: string
+      enum:
+        - NONE
+        - READ
+        - WRITE
+        - PUBLIC
     Message:
       description: An information or error message
       type: object
@@ -369,10 +371,7 @@ components:
       type: object
       properties:
         ownerType:
-          type: string
-          enum:
-            - PROVIDER
-            - CUSTOMER
+          $ref: '#/components/schemas/RpcOwnerType'
         metaData:
           additionalProperties:
             type: string
@@ -394,12 +393,19 @@ components:
         id:
           type: string
         type:
-          type: string
-          enum:
-            - API
-            - WALLET
+          $ref: '#/components/schemas/RpcType'
         username:
           type: string
+    RpcType:
+      type: string
+      enum:
+        - API
+        - WALLET
+    RpcOwnerType:
+      type: string
+      enum:
+        - PROVIDER
+        - CUSTOMER
     ErrorResponse:
       description: The error response
       type: object
@@ -500,14 +506,14 @@ paths:
       parameters:
         - $ref: '#/components/parameters/ContextQueryParam'
       requestBody:
-        $ref : "#/components/requestBodies/EntryRequestBody"
+        $ref: "#/components/requestBodies/EntryRequestBody"
         description: Create a chain using the first entry supplied. The entry needs at
           least a (combination of) globaly unique external Id in the complete
           Blockchain network!
         required: true
       tags:
         - Data
- 
+
 
 
   "/chains/{chainId}/entries/{entryId}":
@@ -552,7 +558,7 @@ paths:
         - $ref: '#/components/parameters/EntryIdPathParam'
       tags:
         - Data
- 
+
 
   "/chains/{chainId}/entries":
     post:
@@ -600,7 +606,7 @@ paths:
         required: true
       tags:
         - Data
- 
+
   "/chains/{chainId}/entries/first":
     get:
       summary: Get the first entry in the provided chain
@@ -632,7 +638,7 @@ paths:
         - $ref: '#/components/parameters/ChainIdPathParam'
       tags:
         - Data
- 
+
   "/chains/{chainId}/entries/last":
     get:
       summary: Get the last entry in the provided chain.
@@ -663,7 +669,7 @@ paths:
         - $ref: '#/components/parameters/ChainIdPathParam'
       tags:
         - Data
- 
+
   "/management/contexts":
     post:
       summary: Create a context
@@ -706,7 +712,7 @@ paths:
         required: true
       tags:
         - Management
- 
+
 
   "/management/contexts/{context}":
     get:
@@ -739,7 +745,7 @@ paths:
         - $ref: '#/components/parameters/ContextPathParam'
       tags:
         - Management
- 
+
     delete:
       summary: Delete a context
       security:
@@ -770,7 +776,7 @@ paths:
         - $ref: '#/components/parameters/ContextPathParam'
       tags:
         - Management
- 
+
   /management/backends:
     post:
       summary: Create a new backend
@@ -810,7 +816,7 @@ paths:
         required: true
       tags:
         - Management
- 
+
     get:
       summary: List backends
       security:
@@ -857,7 +863,7 @@ paths:
             default: false
       tags:
         - Management
- 
+
   "/management/backends/{backendId}":
     get:
       summary: Get backend by id
@@ -910,7 +916,7 @@ paths:
             default: false
       tags:
         - Management
- 
+
     delete:
       summary: Delete a backend
       security:
@@ -952,7 +958,7 @@ paths:
             type: string
       tags:
         - Management
- 
+
   "/management/backends/{backendId}/find":
     get:
       summary: Find backends
