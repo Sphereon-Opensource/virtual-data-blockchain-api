@@ -14,7 +14,7 @@
         <basePackage>com.sphereon.blockchain.data</basePackage>
         <swagger-codegen-maven-plugin.version>3.0.10</swagger-codegen-maven-plugin.version>
         <swagger-annotations.version>1.5.22</swagger-annotations.version>
-        <jackson-dataformat-xml.version>2.4.5</jackson-dataformat-xml.version>
+        <jackson-dataformat-xml.version>[2.7.8,)</jackson-dataformat-xml.version>
         <jackson-databind-nullable.version>0.2.0</jackson-databind-nullable.version>
         <spring-boot-dependencies.version>2.1.6.RELEASE</spring-boot-dependencies.version>
     </properties>
@@ -103,33 +103,22 @@
                 <artifactId>openapi-generator-maven-plugin</artifactId>
                 <version>4.0.3</version>
                 <executions>
-                    <!--     <execution>
-
-                             <goals>
-                                 <goal>generate</goal>
-                             </goals>
-                             <configuration>
-                                 <inputSpec>src/main/resources/api.yaml</inputSpec>
-                                 <language>java</language>
-                                 <configOptions>
-                                     <sourceFolder>src/gen/java/main</sourceFolder>
-                                     <modelPackage>${basePackage}.model</modelPackage>
-                                     <apiPackage>${basePackage}.api</apiPackage>
-                                     <withXml>true</withXml>
-                                 </configOptions>
-                             </configuration>
-                         </execution>-->
                     <execution>
-                        <id>java-webflux-api</id>
+                        <id>java8-model</id>
                         <goals>
                             <goal>generate</goal>
                         </goals>
                         <configuration>
                             <inputSpec>src/main/resources/api.yaml</inputSpec>
-                            <language>spring</language>
+                            <language>java</language>
+                            <generateModelTests>false</generateModelTests>
+                            <generateApiTests>false</generateApiTests>
+                            <generateApis>false</generateApis>
+                            <generateSupportingFiles>false</generateSupportingFiles>
+
                             <configOptions>
                                 <sourceFolder>src/main/java</sourceFolder>
-                                <library>spring-boot</library>
+                                <library>webclient</library>
                                 <!-- <async>true</async> -->
                                 <reactive>true</reactive>
                                 <dateLibrary>java8</dateLibrary>
@@ -138,8 +127,6 @@
                                 <basePackage>${basePackage}</basePackage>
                                 <apiPackage>${basePackage}.api</apiPackage>
                                 <modelPackage>${basePackage}.model</modelPackage>
-                                <generateModelTests>false</generateModelTests>
-                                <generateApiTests>false</generateApiTests>
                                 <interfaceOnly>true</interfaceOnly>
                                 <useBeanValidation>true</useBeanValidation>
                                 <useOptional>true</useOptional>
@@ -147,6 +134,7 @@
                                 <skipDefaultInterface>true</skipDefaultInterface>
                                 <delegatePattern>false</delegatePattern>
                                 <apiFirst>false</apiFirst>
+                                <serializableModel>true</serializableModel>
 
                             </configOptions>
                         </configuration>
