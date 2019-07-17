@@ -1,0 +1,1010 @@
+openapi: 3.0.2
+info:
+  license:
+    name: Apache License Version 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0
+  contact:
+    name: Sphereon DevOps Team
+    url: https://sphereon.com
+    email: dev@sphereon.com
+  description: "The Virtual Data Blockchain API is an easy to use API to store related data (entries)
+    within chains. Currently it stores entries using a Factom, Ethereum or
+    Multichain blockchain as well as mongodb. \r
+
+    For full API documentation please visit:
+    https://docs.sphereon.com/api/virtual-data-blockchain/1.0/html \r
+
+    Interactive testing: A web based test console is available in the
+    Sphereon API store at: https://store.sphereon.com"
+  termsOfService: https://docs.sphereon.com/api/virtual-data-blockchain/1.0/html
+  title: Virtual Data Blockchain API
+  version: "1.0"
+tags:
+  - name: Data
+    description: Data related APIs
+  - name: Management
+    description: Management related APIs
+servers:
+  - url: https://api.sphereon.io/blockchain/virtual-data/1.0
+components:
+  securitySchemes:
+    oauth2schema:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://gw.api.cloud.sphereon.com/token
+          scopes:
+            global: accessEverything
+  parameters:
+    ContextQueryParam:
+      in: query
+      name: context
+      description: The context (contains blockchain settings)
+      required: true
+      schema:
+        type: string
+    ContextPathParam:
+      in: path
+      name: context
+      description: The context (contains blockchain settings)
+      required: true
+      schema:
+        type: string
+    ChainIdPathParam:
+      in: path
+      name: chainId
+      description: The Id of a chain
+      required: true
+      schema:
+        type: string
+    EntryIdPathParam:
+      in: path
+      name: entryId
+      description: The Id of an entry
+      required: true
+      schema:
+        type: string
+  links:
+    FirstEntry:
+      description: >
+        Get the first entry
+      operationId: getFirstEntry
+      parameters:
+        path.context: ${request.path.context}
+        path.chainId: '$response.body#/chainId'
+    LastEntry:
+      description: >
+        Get the last entry
+      operationId: getLastEntry
+      parameters:
+        path.context: ${request.path.context}
+        path.chainId: '$response.body#/chainId'
+  requestBodies:
+    EntryRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/EntryRequest"
+          example:
+            tags: ["Tag Example", "My Data"]
+            blockchain:
+              metadata: [Example, World]
+              data: Hello World
+    EntryResultCallback:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/EntryResult"
+
+  responses:
+    NotFoundResponse:
+      description: Entry or chain does not exists
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ErrorResponse:
+      description: An error occured
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    EntryResultResponse:
+      description: The entry result from the query
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/EntryResult"
+            links:
+              FirstEntry:
+                $ref: "#/components/links/FirstEntry"
+              LastEntry:
+                $ref: "#/components/links/LastEntry"
+          example:
+            context: factom
+            type: CHAIN
+            chainId: 1e92265cdbaac5de353ca32239dd53565740a135ad9594a6166d2abd9cf538e4
+            entryId: 0462e4cc100ca935a3ab9118d0b508f6802815a7290451cd67b2d80fdf080671
+            created: 2019-05-03T09:06:53.543Z
+            index: 0
+            explorers:
+                  - name: The Factoid Explorer
+                    url: https://explorer.factoid.org/entry?hash=0462e4cc100ca935a3ab9118d0b508f6802815a7290451cd67b2d80fdf080671
+                    ledger: FACTOM
+                  - name: Factom.com Explorer
+                    url: https://explorer.factom.com/chains/1e92265cdbaac5de353ca32239dd53565740a135ad9594a6166d2abd9cf538e4/entries/0462e4cc100ca935a3ab9118d0b508f6802815a7290451cd67b2d80fdf080671
+                    ledger: FACTOM
+            finality:
+              level: anchor
+              local: 2019-05-03T09:06:53.544Z
+              network: 2019-05-03T09:07:01.951Z
+              anchor: 2019-05-03T09:10:42.249Z
+            tags: ["Tag Example", "My Data"]
+            blockchain:
+              metadata: ["Example", "World"]
+              data: "Hello World"
+  schemas:
+    ContextRequest:
+      type: object
+      required:
+        - ManagementIds
+        - name
+      properties:
+        access:
+          $ref: "#/components/schemas/Access"
+        backendIds:
+          description: The backend Ids used in this context. Currently only one backend is
+            supported. The first backend Id supplied will be used. In the future
+            it will be possible to connect multiple backends to one context.
+            Only use the backend Ids, not the names here!
+          type: array
+          items:
+            type: string
+        name:
+          description: The name of the context as it is being used in the url. Please
+            regard case! Because of the nature of the context within the API, and the possibility you want long term
+            links to the entry URLs, the context name has to be globally unique amongst tenants!
+          type: string
+    ContextResult:
+      allOf:
+        - $ref: '#/components/schemas/ContextRequest'
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              readOnly: true
+              type: string
+              description: The unique id assigned to this context
+    EntryRequest:
+      description: This is the Entry Request to create an entry or chain (first entry).
+        The chain Id is calculated from the firt Entry where the content part of
+        the entry is omited during Chain ID calculation. After the chain is
+        stored you can traverse the cahin using the API (not this object)
+      type: object
+      required:
+        - blockchain
+      properties:
+        tags:
+          $ref: "#/components/schemas/Tags"
+        blockchain:
+          $ref: "#/components/schemas/BlockchainEntry"
+    EntryResult:
+      description: This is the Data Result. A chain is created with a first Entry.
+        The chain Id is calculated from the firt Entry where the content part of
+        the entry is omited during Chain ID calculation. After the chain is
+        stored you can traverse the cahin using the API (not this object)
+      type: object
+      required:
+        - type
+        - chainId
+        - DataId
+        - created
+        - Management
+        - Data
+      properties:
+        type:
+          $ref: "#/components/schemas/EntryType"
+        chainId:
+          description: Chain Id
+          readOnly: true
+          type: string
+        entryId:
+          description: Entry Id
+          readOnly: true
+          type: string
+        created:
+          description: When was the chain or entry first created
+          readOnly: true
+          type: string
+          format: date-time
+        finality:
+          description: The finality states of the chain/entries itsels
+          readOnly: true
+          $ref: "#/components/schemas/Finality"
+        tags:
+          $ref: "#/components/schemas/Tags"
+          readOnly: true
+        index:
+          description: The index
+          readOnly: true
+          type: integer
+          format: int64
+        explorers:
+          type: array
+          items:
+            type: object
+            $ref: '#/components/schemas/Explorer'
+        url:
+          description: The URL
+          readOnly: true
+          type: string
+        context:
+          description: The Context
+          readOnly: true
+          type: string
+        blockchain:
+          $ref: "#/components/schemas/BlockchainEntry"
+    BlockchainEntry:
+      description: An Entry contains the actual data and an array of metadata
+      type: object
+      properties:
+        metadata:
+          description: Metadata
+          type: array
+          items:
+            type: string
+            format: byte
+        data:
+          format: byte
+          description: Content
+          type: string
+    Finality:
+      properties:
+        level:
+          $ref: "#/components/schemas/FinalityLevel"
+        backendId:
+          type: string
+        backendName:
+          type: string
+        local:
+          type: string
+          format: date-time
+        network:
+          type: string
+          format: date-time
+        anchor:
+          type: string
+          format: date-time
+    FinalityLevel:
+      type: string
+      enum:
+        - local
+        - network
+        - anchor
+    LedgerImplementation:
+      type: string
+      enum:
+        - DATABASE
+        - FACTOM
+        - MULTICHAIN
+        - ETHEREUM
+    Explorer:
+      description: Blockchain explorer data
+      type: object
+      properties:
+        name:
+          description: The name of the explorer
+          type: string
+        url:
+          description: The url for the explorer
+          type: string
+        ledger:
+          type: enum
+          $ref: '#/components/schemas/LedgerImplementation'
+        network:
+          type: enum
+          $ref: '#/components/schemas/NetworkType'
+    EntryType:
+      type: string
+      enum:
+        - CHAIN
+        - Data
+    NetworkType:
+      type: string
+      enum:
+        - PRIVATE
+        - SANDBOX
+        - PUBLIC
+    Tags:
+      description: Tags
+      type: array
+      items:
+        type: string
+    Access:
+      type: object
+      properties:
+        type:
+          type: enum
+          $ref: '#/components/schemas/NetworkType'
+        modes:
+          type: array
+          items:
+            type: string
+            enum:
+              - NONE
+              - READ
+              - WRITE
+              - PUBLIC
+        blackList:
+          type: array
+          items:
+            type: string
+        whiteList:
+          type: array
+          items:
+            type: string
+    Message:
+      description: An information or error message
+      type: object
+      required:
+        - level
+        - message
+      properties:
+        code:
+          type: string
+        level:
+          type: string
+          enum:
+            - INFO
+            - WARNING
+            - FATAL
+        cause:
+          $ref: "#/components/schemas/Message"
+        content:
+          type: string
+    RpcProvider:
+      description: RpcProvider
+      type: object
+      properties:
+        ownerType:
+          type: string
+          enum:
+            - PROVIDER
+            - CUSTOMER
+        metaData:
+          additionalProperties:
+            type: string
+          type: object
+        password:
+          type: string
+        access:
+          $ref: "#/components/schemas/Access"
+        ledgerName:
+          type: string
+        resourceFiles:
+          additionalProperties:
+            type: string
+          type: object
+        walletInfo:
+          type: string
+        host:
+          type: string
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - API
+            - WALLET
+        username:
+          type: string
+    ErrorResponse:
+      description: The error response
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+    Backend:
+      description: A backend is a blockchain implementation along with it's nodes
+        (rpcProviders). You only need a backend when you wish to connect one of
+        the supported blockchain implementations in a private blockchain.
+        Otherwise use one of the public provided backends for your context
+      type: object
+      required:
+        - name
+        - rpcProviders
+      properties:
+        rpcProviders:
+          description: One or more nodes that comprise the blockchain backend
+          type: array
+          items:
+            $ref: "#/components/schemas/RpcProvider"
+        apiVersion:
+          format: int32
+          type: integer
+        name:
+          description: The name of the backend.
+          type: string
+        start:
+          format: date-time
+          type: string
+        end:
+          format: date-time
+          type: string
+        ledger:
+          type: enum
+          $ref: '#/components/schemas/LedgerImplementation'
+        id:
+          readOnly: true
+          type: string
+        externalAccess:
+          $ref: "#/components/schemas/Access"
+paths:
+  "/chains/subscriptions":
+    post:
+      summary: Create a callback subscription
+      security:
+        - oauth2schema:
+            - global
+      description: Create a global callback subscription. Whenever new chains or entries are created you will recieve a callback
+      operationId: createGlobalSubscription
+      parameters:
+        - $ref: '#/components/parameters/ContextQueryParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                states:
+                  type: string
+                timestampStageUrl:
+                  type: string
+                errorUrl:
+                  type: string
+                successUrl:
+                  type: string
+      responses:
+        "200":
+          description: OK
+      callbacks:
+        databaseStage:
+          '{$request.body#/databaseStageUrl}':
+            post:
+              requestBody:
+                $ref: '#/components/requestBodies/EntryResultCallback'
+              responses:
+                '200':
+                  description: OK
+  "/chains":
+    post:
+      summary: Create a new chain
+      security:
+        - oauth2schema:
+            - global
+      description: Create a new chain. You can regard a chain as a
+        virtual blockchain within a real blockchain, All entries in a chain are linked and
+        rely on data from previous entries in the chain.
+      operationId: createChain
+      responses:
+        "200":
+          $ref: "#/components/responses/EntryResultResponse"
+        "202":
+          $ref: "#/components/responses/EntryResultResponse"
+        default:
+          $ref: "#/components/responses/ErrorResponse"
+      parameters:
+        - $ref: '#/components/parameters/ContextQueryParam'
+      requestBody:
+        $ref : "#/components/requestBodies/EntryRequestBody"
+        description: Create a chain using the first entry supplied. The entry needs at
+          least a (combination of) globaly unique external Id in the complete
+          Blockchain network!
+        required: true
+      tags:
+        - Data
+ 
+
+
+  "/chains/{chainId}/entries/{entryId}":
+    get:
+      summary: Get an existing entry in the provided chain
+      security:
+        - oauth2schema:
+            - global
+      description: Get an existing entry in the provided chain
+      operationId: entryById
+      responses:
+        "200":
+          description: The existing entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntryResult"
+              examples:
+                entry:
+                  value:
+                    metadata: ["My Chain", "v1"]
+                    data: "Hello World"
+          links:
+            FirstEntry:
+              $ref: "#/components/links/FirstEntry"
+            LastEntry:
+              $ref: "#/components/links/LastEntry"
+        "404":
+          description: Entry or chain does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          links:
+            FirstEntry:
+              $ref: "#/components/links/FirstEntry"
+            LastEntry:
+              $ref: "#/components/links/LastEntry"
+      parameters:
+        - $ref: '#/components/parameters/ContextQueryParam'
+        - $ref: '#/components/parameters/ChainIdPathParam'
+        - $ref: '#/components/parameters/EntryIdPathParam'
+      tags:
+        - Data
+ 
+
+  "/chains/{chainId}/entries":
+    post:
+      summary: Create a new entry in the provided chain
+      security:
+        - oauth2schema:
+            - global
+      description: Create a new entry in the provided chain. The entry will be linked to
+        the previous entry.
+      operationId: createEntry
+      responses:
+        "200":
+          description: Entry already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntryResult"
+        "202":
+          description: Entry creation request received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntryResult"
+        "400":
+          description: Invalid entry request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Chain does not exist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      parameters:
+        - $ref: '#/components/parameters/ContextQueryParam'
+        - $ref: '#/components/parameters/ChainIdPathParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EntryRequest"
+        description: Create a new entry for the specified chain
+        required: true
+      tags:
+        - Data
+ 
+  "/chains/{chainId}/entries/first":
+    get:
+      summary: Get the first entry in the provided chain
+      security:
+        - oauth2schema:
+            - global
+      description: Get the first entry in the provided chain. This is the oldest entry.
+        Call getEntries to retrieve all entries
+      operationId: getFirstEntry
+      responses:
+        "200":
+          description: The existing first entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntryResult"
+
+          links:
+            LastEntry:
+              $ref: "#/components/links/LastEntry"
+        "404":
+          description: Entry or chain does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      parameters:
+        - $ref: '#/components/parameters/ContextQueryParam'
+        - $ref: '#/components/parameters/ChainIdPathParam'
+      tags:
+        - Data
+ 
+  "/chains/{chainId}/entries/last":
+    get:
+      summary: Get the last entry in the provided chain.
+      security:
+        - oauth2schema:
+            - global
+      description: Get the last entry in the provided chain. This is the most recent entry.
+      operationId: getLastEntry
+      responses:
+        "200":
+          description: The existing anchored entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntryResult"
+
+          links:
+            FirstEntry:
+              $ref: "#/components/links/FirstEntry"
+        "404":
+          description: Chain does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      parameters:
+        - $ref: '#/components/parameters/ContextQueryParam'
+        - $ref: '#/components/parameters/ChainIdPathParam'
+      tags:
+        - Data
+ 
+  "/management/contexts":
+    post:
+      summary: Create a context
+      security:
+        - oauth2schema:
+            - global
+      description: Create a new context
+      operationId: createContext
+      responses:
+        "200":
+          description: Context already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContextResult"
+        "202":
+          description: Context creation request received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContextResult"
+        "400":
+          description: Invalid context request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Backend request not allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContextRequest"
+        description: context
+        required: true
+      tags:
+        - Management
+ 
+
+  "/management/contexts/{context}":
+    get:
+      summary: Get a context
+      security:
+        - oauth2schema:
+            - global
+      description: Get an existing context
+      operationId: getContext
+      responses:
+        "200":
+          description: Context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContextResult"
+        "400":
+          description: Invalid context request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Context not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      parameters:
+        - $ref: '#/components/parameters/ContextPathParam'
+      tags:
+        - Management
+ 
+    delete:
+      summary: Delete a context
+      security:
+        - oauth2schema:
+            - global
+      description: Delete an existing context
+      operationId: deleteContext
+      responses:
+        "200":
+          description: The deleted context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContextResult"
+        "400":
+          description: Invalid context request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Context not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      parameters:
+        - $ref: '#/components/parameters/ContextPathParam'
+      tags:
+        - Management
+ 
+  /management/backends:
+    post:
+      summary: Create a new backend
+      security:
+        - oauth2schema:
+            - global
+      description: Create a new backend. A Backend is the link to one blockchain
+        implementation and it's nodes. Unless you create your own private
+        blockchain network, you should not have to create a new backend. Just
+        use one of the provide backends available.
+      operationId: createBackend
+      responses:
+        "202":
+          description: Backend creation request received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Backend"
+        "400":
+          description: Invalid backend request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Backend request not allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Backend"
+        description: backend
+        required: true
+      tags:
+        - Management
+ 
+    get:
+      summary: List backends
+      security:
+        - oauth2schema:
+            - global
+      description: List existing backends. Optionally including public backends of
+        others.  Please note that we never return sensitive information like
+        password or rpc hosts. Even not for backend owners themselves
+      operationId: listBackends
+      responses:
+        "200":
+          description: List of backend
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Backend"
+        "400":
+          description: Invalid backend request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Backend request not allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Backend not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      parameters:
+        - in: query
+          name: includePublic
+          description: includePublic
+          required: false
+          schema:
+            type: boolean
+            default: false
+      tags:
+        - Management
+ 
+  "/management/backends/{backendId}":
+    get:
+      summary: Get backend by id
+      security:
+        - oauth2schema:
+            - global
+      description: Get existing backend by id (not by name). Optionally including public
+        backend of others. Please note that we never return sensitive
+        information like password or rpc hosts. Even not for backend owners
+        themselves
+      operationId: getBackend
+      responses:
+        "200":
+          description: Backend
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Backend"
+        "400":
+          description: Invalid backend request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Backend request not allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Backend not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      parameters:
+        - in: path
+          name: backendId
+          description: backendId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: includePublic
+          description: includePublic
+          required: false
+          schema:
+            type: boolean
+            default: false
+      tags:
+        - Management
+ 
+    delete:
+      summary: Delete a backend
+      security:
+        - oauth2schema:
+            - global
+      description: Delete backend by id (not by name)
+      operationId: deleteBackend
+      responses:
+        "200":
+          description: Backend deleted
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/Backend"
+        "400":
+          description: Invalid backend request
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Backend request not allowed
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Backend not found
+          content:
+            "*/*":
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      parameters:
+        - in: path
+          name: backendId
+          description: backendId
+          required: true
+          schema:
+            type: string
+      tags:
+        - Management
+ 
+  "/management/backends/{backendId}/find":
+    get:
+      summary: Find backends
+      security:
+        - oauth2schema:
+            - global
+      description: Find existing backend(s) by id (single result) and/or name (multiple
+        results). Optionally including public backends of others. Please note
+        that we never return sensitive information like password or rpc hosts.
+        Even not for backend owners themselves
+      operationId: findBackends
+      responses:
+        "200":
+          description: List of backend
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Backend"
+        "400":
+          description: Invalid backend request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Backend request not allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Backend not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      parameters:
+        - in: path
+          name: backendId
+          description: backendId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: includePublic
+          description: includePublic
+          required: false
+          schema:
+            type: boolean
+            default: false
+      tags:
+        - Management
+ 

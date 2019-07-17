@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.sphereon.blockchain</groupId>
+    <artifactId>virtual-data-blockchain-api</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>virtual-data-blockchain-api</name>
+    <description>Virtual Data Blockchain API</description>
+
+    <properties>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <basePackage>com.sphereon.blockchain.data</basePackage>
+        <swagger-codegen-maven-plugin.version>3.0.10</swagger-codegen-maven-plugin.version>
+        <swagger-annotations.version>1.5.22</swagger-annotations.version>
+        <jackson-dataformat-xml.version>2.4.5</jackson-dataformat-xml.version>
+        <jackson-databind-nullable.version>0.2.0</jackson-databind-nullable.version>
+        <spring-boot-dependencies.version>2.1.6.RELEASE</spring-boot-dependencies.version>
+    </properties>
+
+    <scm>
+        <connection>scm:git:https://github.com/Sphereon-Opensource/virtual-data-blockchain-api.git</connection>
+        <developerConnection>scm:git:https://github.com/Sphereon-Opensource/virtual-data-blockchain-api.git</developerConnection>
+        <url>https://github.com/Sphereon-Opensource/virtual-data-blockchain-api</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sphereon-opensource-snapshots</id>
+            <url>http://nexus.qa.sphereon.com/repository/sphereon-opensource-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>sphereon-opensource-releases</id>
+            <url>http://nexus.qa.sphereon.com/repository/sphereon-opensource-releases/</url>
+        </repository>
+    </distributionManagement>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>${swagger-annotations.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>${jackson-dataformat-xml.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>${jackson-databind-nullable.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <!--
+                Please note that there are multiple swagger generators these days. We use one with Webflux support
+                For option support see: https://github.com/OpenAPITools/openapi-generator/blob/master/modules/openapi-generator/src/main/java/org/openapitools/codegen/languages/SpringCodegen.java#L117
+                -->
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>4.0.3</version>
+                <executions>
+                    <!--     <execution>
+
+                             <goals>
+                                 <goal>generate</goal>
+                             </goals>
+                             <configuration>
+                                 <inputSpec>src/main/resources/api.yaml</inputSpec>
+                                 <language>java</language>
+                                 <configOptions>
+                                     <sourceFolder>src/gen/java/main</sourceFolder>
+                                     <modelPackage>${basePackage}.model</modelPackage>
+                                     <apiPackage>${basePackage}.api</apiPackage>
+                                     <withXml>true</withXml>
+                                 </configOptions>
+                             </configuration>
+                         </execution>-->
+                    <execution>
+                        <id>java-webflux-api</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>src/main/resources/api.yaml</inputSpec>
+                            <language>spring</language>
+                            <configOptions>
+                                <sourceFolder>src/main/java</sourceFolder>
+                                <library>spring-boot</library>
+                                <!-- <async>true</async> -->
+                                <reactive>true</reactive>
+                                <dateLibrary>java8</dateLibrary>
+                                <useTags>true</useTags>
+                                <withXml>true</withXml>
+                                <basePackage>${basePackage}</basePackage>
+                                <apiPackage>${basePackage}.api</apiPackage>
+                                <modelPackage>${basePackage}.model</modelPackage>
+                                <generateModelTests>false</generateModelTests>
+                                <generateApiTests>false</generateApiTests>
+                                <interfaceOnly>true</interfaceOnly>
+                                <useBeanValidation>true</useBeanValidation>
+                                <useOptional>true</useOptional>
+                                <skipDefaultInterface>true</skipDefaultInterface>
+                                <skipDefaultInterface>true</skipDefaultInterface>
+                                <delegatePattern>false</delegatePattern>
+                                <apiFirst>false</apiFirst>
+
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+
+    </build>
+
+</project>
