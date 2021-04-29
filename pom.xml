@@ -101,7 +101,7 @@
                 -->
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>4.0.3</version>
+                <version>5.1.0</version>
                 <executions>
                     <execution>
                         <id>java8-model</id>
